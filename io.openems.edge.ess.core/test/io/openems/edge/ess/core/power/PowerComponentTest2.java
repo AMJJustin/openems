@@ -31,36 +31,53 @@ public class PowerComponentTest2 {
 	public void after() {
 		assertEquals("Not all Callbacks were actually called", 0, openCallbacks.get());
 	}
-
+	
+	
 	@Test
-	public void testCluster() throws Exception {
+	public void testClusterHomogenous() throws Exception {
 		PowerComponent powerComponent = new PowerComponentImpl();
-		var ess1 = new DummyManagedSymmetricEss("ess1", powerComponent) //
+
+		var essB1 = new DummyManagedSymmetricEss("essB1", powerComponent) //
 				.withAllowedChargePower(-50000) //
 				.withAllowedDischargePower(50000) //
-				.withMaxApparentPower(12000) //
+				.withMaxApparentPower(50000) //
+				.withSoc(16);
+		var essB2 = new DummyManagedSymmetricEss("essB2", powerComponent) //
+				.withAllowedChargePower(-50000) //
+				.withAllowedDischargePower(50000) //
+				.withMaxApparentPower(50000) //
+				.withSoc(17);
+		var essB3 = new DummyManagedSymmetricEss("essB3", powerComponent) //
+				.withAllowedChargePower(-50000) //
+				.withAllowedDischargePower(50000) //
+				.withMaxApparentPower(50000) //
+				.withSoc(17);
+		var essB4 = new DummyManagedSymmetricEss("essB4", powerComponent) //
+				.withAllowedChargePower(-50000) //
+				.withAllowedDischargePower(50000) //
+				.withMaxApparentPower(50000) //
+				.withSoc(17);
+		var essA1 = new DummyManagedSymmetricEss("essA1", powerComponent) //
+				.withAllowedChargePower(-50000) //
+				.withAllowedDischargePower(50000) //
+				.withMaxApparentPower(50000) //
+				.withSoc(13);
+		var essA2 = new DummyManagedSymmetricEss("essA2", powerComponent) //
+				.withAllowedChargePower(-50000) //
+				.withAllowedDischargePower(50000) //
+				.withMaxApparentPower(50000) //
+				.withSoc(12);
+		var essA3 = new DummyManagedSymmetricEss("essA3", powerComponent) //
+				.withAllowedChargePower(-50000) //
+				.withAllowedDischargePower(50000) //
+				.withMaxApparentPower(50000) //
+				.withSoc(14);
+		var essA4 = new DummyManagedSymmetricEss("essA4", powerComponent) //
+				.withAllowedChargePower(-50000) //
+				.withAllowedDischargePower(50000) //
+				.withMaxApparentPower(50000) //
 				.withSoc(15);
-		var ess2 = new DummyManagedSymmetricEss("ess2", powerComponent) //
-				.withAllowedChargePower(-50000) //
-				.withAllowedDischargePower(50000) //
-				.withMaxApparentPower(12000) //
-				.withSoc(20);
-		var ess3 = new DummyManagedSymmetricEss("ess3", powerComponent) //
-				.withAllowedChargePower(-50000) //
-				.withAllowedDischargePower(50000) //
-				.withMaxApparentPower(12000) //
-				.withSoc(60);
-		var ess4 = new DummyManagedSymmetricEss("ess4", powerComponent) //
-				.withAllowedChargePower(-50000) //
-				.withAllowedDischargePower(50000) //
-				.withMaxApparentPower(12000) //
-				.withSoc(70);
-		var ess5 = new DummyManagedSymmetricEss("ess5", powerComponent) //
-				.withAllowedChargePower(-50000) //
-				.withAllowedDischargePower(50000) //
-				.withMaxApparentPower(12000) //
-				.withSoc(80);
-		var ess0 = new DummyMetaEss("ess0", powerComponent, ess1, ess2, ess3, ess4, ess5); //
+		var ess0 = new DummyMetaEss("ess0", powerComponent, essA1, essA2, essA3, essA4, essB1, essB2, essB3, essB4); //
 
 		final var cm = new DummyConfigurationAdmin();
 		cm.getOrCreateEmptyConfiguration(PowerComponent.SINGLETON_SERVICE_PID);
@@ -68,11 +85,14 @@ public class PowerComponentTest2 {
 		final var componentTest = new ComponentTest(powerComponent) //
 				.addReference("cm", cm) //
 				.addReference("addEss", ess0) //
-				.addReference("addEss", ess1) //
-				.addReference("addEss", ess2) //
-				.addReference("addEss", ess3) //
-				.addReference("addEss", ess4) //
-				.addReference("addEss", ess5) //
+				.addReference("addEss", essA1) //
+				.addReference("addEss", essA2) //
+				.addReference("addEss", essA3) //
+				.addReference("addEss", essA4) //
+				.addReference("addEss", essB1) //
+				.addReference("addEss", essB2) //
+				.addReference("addEss", essB3) //
+				.addReference("addEss", essB4) //
 				.activate(MyConfig.create() //
 						.setStrategy(SolverStrategy.OPERATE_CLUSTER_AT_MAX_EFFICIENCY) //
 						.setSymmetricMode(true) //
@@ -81,96 +101,173 @@ public class PowerComponentTest2 {
 						.build()); //
 
 		// #1
-		expect("#1", ess1, -5000, -3000);
-		expect("#1", ess2, -0, 0);
-		ess0.addPowerConstraint("#1", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
+		// expect("#1", ess1, -5000, -3000);
+		// expect("#1", ess2, -0, 0);
+		ess0.addPowerConstraint("#1", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -55000);
 		ess0.addPowerConstraint("#1", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
 		//ess1.withSoc(15); // this is for test #2
 		componentTest.next(new TestCase("#1"));
 
-//		// #2
-		expect("#2", ess1, -4697, -2818);
-		expect("#2", ess2, -302, -181);
+		// #2
+		//expect("#2", ess1, -4697, -2818);
+		//expect("#2", ess2, -302, -181);
 		ess0.addPowerConstraint("#2", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
 		ess0.addPowerConstraint("#2", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
 		componentTest.next(new TestCase("#2"));
-//
-//		// #3
-//		expect("#3", ess1, -4429, -2657);
-//		expect("#3", ess2, -570, -342);
-//		ess0.addPowerConstraint("#3", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#3", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#3"));
-//
-//		// #4
-//		expect("#4", ess1, -4190, -2514);
-//		expect("#4", ess2, -809, -485);
-//		ess0.addPowerConstraint("#4", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#4", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#4"));
-//
-//		// #5
-//		expect("#5", ess1, -3976, -2385);
-//		expect("#5", ess2, -1023, -614);
-//		ess0.addPowerConstraint("#5", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#5", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#5"));
-//
-//		// #6
-//		expect("#6", ess1, -3782, -2269);
-//		expect("#6", ess2, -1217, -730);
-//		ess0.addPowerConstraint("#6", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#6", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#6"));
-//
-//		// #7
-//		expect("#7", ess1, -3606, -2164);
-//		expect("#7", ess2, -1393, -835);
-//		ess0.addPowerConstraint("#7", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#7", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#7"));
-//
-//		// #8
-//		expect("#8", ess1, -3446, -2067);
-//		expect("#8", ess2, -1553, -932);
-//		ess0.addPowerConstraint("#8", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#8", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#8"));
-//
-//		// #9
-//		expect("#9", ess1, -3300, -1980);
-//		expect("#9", ess2, -1699, -1019);
-//		ess0.addPowerConstraint("#9", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#9", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#9"));
-//
-//		// #10
-//		expect("#10", ess1, -3165, -1899);
-//		expect("#10", ess2, -1834, -1100);
-//		ess0.addPowerConstraint("#10", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#10", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#10"));
-//
-//		ess1.withSymmetricApplyPowerCallback(null);
-//		ess2.withSymmetricApplyPowerCallback(null);
-//		componentTest.next(new TestCase("#11"));
-//		componentTest.next(new TestCase("#11"));
-//		componentTest.next(new TestCase("#12"));
-//		componentTest.next(new TestCase("#13"));
-//		componentTest.next(new TestCase("#14"));
-//		componentTest.next(new TestCase("#15"));
-//		componentTest.next(new TestCase("#16"));
-//		componentTest.next(new TestCase("#17"));
-//		componentTest.next(new TestCase("#18"));
-//		componentTest.next(new TestCase("#19"));
-//
-//		// #20
-//		expect("#20", ess1, -0, 0);
-//		expect("#20", ess2, -5000, -3000);
-//		ess0.addPowerConstraint("#20", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
-//		ess0.addPowerConstraint("#20", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
-//		componentTest.next(new TestCase("#20"));
+
 	}
+	
+	
+//	@Test
+//	public void testClusterHomogenous() throws Exception {
+//		PowerComponent powerComponent = new PowerComponentImpl();
+//		var essA1 = new DummyManagedSymmetricEss("essA1", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(50000) //
+//				.withSoc(23);
+//		var essA2 = new DummyManagedSymmetricEss("essA2", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(50000) //
+//				.withSoc(33);
+//		var essA3 = new DummyManagedSymmetricEss("essA3", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(50000) //
+//				.withSoc(48);
+//		var essA4 = new DummyManagedSymmetricEss("essA4", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(50000) //
+//				.withSoc(60);
+//		var essB1 = new DummyManagedSymmetricEss("essB1", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(50000) //
+//				.withSoc(12);
+//		var essB2 = new DummyManagedSymmetricEss("essB2", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(50000) //
+//				.withSoc(70);
+//		var essB3 = new DummyManagedSymmetricEss("essB3", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(50000) //
+//				.withSoc(80);
+//		var essB4 = new DummyManagedSymmetricEss("essB4", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(50000) //
+//				.withSoc(45);
+//		var ess0 = new DummyMetaEss("ess0", powerComponent, essA1, essA2, essA3, essA4, essB1, essB2, essB3, essB4); //
+//
+//		final var cm = new DummyConfigurationAdmin();
+//		cm.getOrCreateEmptyConfiguration(PowerComponent.SINGLETON_SERVICE_PID);
+//
+//		final var componentTest = new ComponentTest(powerComponent) //
+//				.addReference("cm", cm) //
+//				.addReference("addEss", ess0) //
+//				.addReference("addEss", essA1) //
+//				.addReference("addEss", essA2) //
+//				.addReference("addEss", essA3) //
+//				.addReference("addEss", essA4) //
+//				.addReference("addEss", essB1) //
+//				.addReference("addEss", essB2) //
+//				.addReference("addEss", essB3) //
+//				.addReference("addEss", essB4) //
+//				.activate(MyConfig.create() //
+//						.setStrategy(SolverStrategy.OPERATE_CLUSTER_AT_MAX_EFFICIENCY) //
+//						.setSymmetricMode(true) //
+//						.setDebugMode(false) //
+//						.setEnablePid(false) //
+//						.build()); //
+//
+//		// #1
+//		// expect("#1", ess1, -5000, -3000);
+//		// expect("#1", ess2, -0, 0);
+//		ess0.addPowerConstraint("#1", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
+//		ess0.addPowerConstraint("#1", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
+//		//ess1.withSoc(15); // this is for test #2
+//		componentTest.next(new TestCase("#1"));
+//
+//		// #2
+//		//expect("#2", ess1, -4697, -2818);
+//		//expect("#2", ess2, -302, -181);
+//		ess0.addPowerConstraint("#2", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
+//		ess0.addPowerConstraint("#2", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
+//		componentTest.next(new TestCase("#2"));
+//
+//	}
+	
+	
+	
+
+//	@Test
+//	public void testCluster() throws Exception {
+//		PowerComponent powerComponent = new PowerComponentImpl();
+//		var ess1 = new DummyManagedSymmetricEss("ess1", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(12000) //
+//				.withSoc(15);
+//		var ess2 = new DummyManagedSymmetricEss("ess2", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(12000) //
+//				.withSoc(20);
+//		var ess3 = new DummyManagedSymmetricEss("ess3", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(12000) //
+//				.withSoc(60);
+//		var ess4 = new DummyManagedSymmetricEss("ess4", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(12000) //
+//				.withSoc(70);
+//		var ess5 = new DummyManagedSymmetricEss("ess5", powerComponent) //
+//				.withAllowedChargePower(-50000) //
+//				.withAllowedDischargePower(50000) //
+//				.withMaxApparentPower(12000) //
+//				.withSoc(80);
+//		var ess0 = new DummyMetaEss("ess0", powerComponent, ess1, ess2, ess3, ess4, ess5); //
+//
+//		final var cm = new DummyConfigurationAdmin();
+//		cm.getOrCreateEmptyConfiguration(PowerComponent.SINGLETON_SERVICE_PID);
+//
+//		final var componentTest = new ComponentTest(powerComponent) //
+//				.addReference("cm", cm) //
+//				.addReference("addEss", ess0) //
+//				.addReference("addEss", ess1) //
+//				.addReference("addEss", ess2) //
+//				.addReference("addEss", ess3) //
+//				.addReference("addEss", ess4) //
+//				.addReference("addEss", ess5) //
+//				.activate(MyConfig.create() //
+//						.setStrategy(SolverStrategy.OPERATE_CLUSTER_AT_MAX_EFFICIENCY) //
+//						.setSymmetricMode(true) //
+//						.setDebugMode(false) //
+//						.setEnablePid(false) //
+//						.build()); //
+//
+//		// #1
+//		expect("#1", ess1, -5000, -3000);
+//		expect("#1", ess2, -0, 0);
+//		ess0.addPowerConstraint("#1", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
+//		ess0.addPowerConstraint("#1", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
+//		//ess1.withSoc(15); // this is for test #2
+//		componentTest.next(new TestCase("#1"));
+//
+////		// #2
+//		expect("#2", ess1, -4697, -2818);
+//		expect("#2", ess2, -302, -181);
+//		ess0.addPowerConstraint("#2", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS, -5000);
+//		ess0.addPowerConstraint("#2", Phase.ALL, Pwr.REACTIVE, Relationship.EQUALS, -3000);
+//		componentTest.next(new TestCase("#2"));
+//
+//	}
 
 	private static void expect(String description, DummyManagedSymmetricEss ess, int p, int q) {
 		openCallbacks.incrementAndGet();
